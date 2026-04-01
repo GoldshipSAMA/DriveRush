@@ -162,6 +162,10 @@ button {
   padding: 18px 24px 24px;
 }
 
+.app-shell.no-context {
+  grid-template-columns: 180px 1fr;
+}
+
 .sidebar,
 .character-sidebar,
 .profile-sidebar {
@@ -333,6 +337,26 @@ button {
   color: var(--muted);
   border-bottom: 1px solid var(--line);
   font-size: 13px;
+}
+
+.guide-content {
+  padding: 14px;
+  color: #334155;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.guide-content p {
+  margin: 0;
+}
+
+.guide-list {
+  margin: 10px 0;
+  padding-left: 22px;
+}
+
+.guide-list li {
+  margin: 4px 0;
 }
 
 #profileTable.is-hidden,

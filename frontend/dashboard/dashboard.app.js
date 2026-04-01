@@ -354,7 +354,6 @@ async function exportToLocalJson() {
 }
 
 function bindEvents() {
-  refs.syncBtn.addEventListener("click", triggerSync);
   if (refs.fullSyncBtn) {
     refs.fullSyncBtn.addEventListener("click", triggerFullSync);
   }

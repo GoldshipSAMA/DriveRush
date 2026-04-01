@@ -272,7 +272,9 @@ function getMetricDelta(match) {
 }
 
 function updateViewSwitch() {
+  const hideContextSidebar = state.currentView === "guide";
   setActiveByData(refs.sideTabs, "view", state.currentView);
+  refs.viewGuide.classList.toggle("is-hidden", state.currentView !== "guide");
   refs.viewProfile.classList.toggle("is-hidden", state.currentView !== "profile");
   refs.viewBattlelog.classList.toggle("is-hidden", state.currentView !== "battlelog");
   refs.viewFramedata.classList.toggle("is-hidden", state.currentView !== "framedata");
@@ -281,6 +283,12 @@ function updateViewSwitch() {
     state.currentView !== "battlelog" && state.currentView !== "framedata"
   );
   refs.profileSidebar.classList.toggle("is-hidden", state.currentView !== "profile");
+  if (refs.contextSidebar) {
+    refs.contextSidebar.classList.toggle("is-hidden", hideContextSidebar);
+  }
+  if (refs.appShell) {
+    refs.appShell.classList.toggle("no-context", hideContextSidebar);
+  }
 }
 
 function setSyncStatus() {

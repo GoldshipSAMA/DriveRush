@@ -14,7 +14,6 @@
         <p class="subtitle">左侧模块导航，中间筛选导航，右侧查看详细数据</p>
       </div>
       <div class="actions">
-        <button id="syncBtn" class="primary">从当前页面同步</button>
         <button id="fullSyncBtn" class="primary">全量同步</button>
         <button id="silentSyncBtn" class="secondary">静默导入</button>
         <button id="cloudSyncBtn" class="secondary">同步到云端</button>
@@ -50,14 +49,15 @@
       <button id="cloudLogoutBtn" class="secondary is-hidden" type="button">退出登录</button>
     </section>
 
-    <main class="app-shell">
+    <main class="app-shell" id="appShell">
       <aside class="sidebar">
+        <button class="side-tab" data-view="guide">使用说明</button>
         <button class="side-tab" data-view="profile">基本资料</button>
         <button class="side-tab active" data-view="battlelog">格斗记录</button>
         <button class="side-tab" data-view="framedata">帧数表</button>
       </aside>
 
-      <div class="context-sidebar">
+      <div class="context-sidebar" id="contextSidebar">
         <aside class="character-sidebar" id="characterSidebar">
           <h3 class="sidebar-title">角色</h3>
           <div class="sidebar-list" id="characterList"></div>
@@ -76,6 +76,26 @@
       </div>
 
       <section class="views">
+        <section id="view-guide" class="view-card is-hidden">
+          <section class="panel guide-panel">
+            <div class="panel-head">
+              <h2>使用说明</h2>
+            </div>
+            <div class="guide-content">
+              <p>欢迎使用 Buckler 战绩面板，建议按下面顺序开始：</p>
+              <ol class=”guide-list”>
+                <li>打开https://www.streetfighter.com/6/zh-hans登录。</li>
+                <li>点击“资料”进入个人信息页。保持标签页开启。</li>
+                <li>点击页面顶部的”全量同步”或”静默导入”开始同步数据。</li>
+                <li>等待同步完成后，切换到“基本资料”查看胜率、段位积分、Master 积分和格斗成就。</li>
+                <li>在“格斗记录”中查看 MR/LP 折线与对局明细，可按时间范围和分页筛选。</li>
+                <li>在“帧数表”中选择角色，查看招式帧数与对应输入指令。</li>
+              </ol>
+              <p>提示：首次使用或长时间未同步时，建议先执行一次“全量同步”，后续再使用增量同步。</p>
+            </div>
+          </section>
+        </section>
+
         <section id="view-profile" class="view-card is-hidden">
           <section class="panel profile-panel">
             <div class="panel-head">

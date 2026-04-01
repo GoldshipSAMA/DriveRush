@@ -191,7 +191,6 @@ const state = {
 };
 
 const refs = {
-  syncBtn: document.getElementById("syncBtn"),
   fullSyncBtn: document.getElementById("fullSyncBtn"),
   silentSyncBtn: document.getElementById("silentSyncBtn"),
   cloudSyncBtn: document.getElementById("cloudSyncBtn"),
@@ -208,7 +207,10 @@ const refs = {
   cloudRegisterBtn: document.getElementById("cloudRegisterBtn"),
   cloudLogoutBtn: document.getElementById("cloudLogoutBtn"),
   debugBox: document.getElementById("debugBox"),
+  appShell: document.getElementById("appShell"),
+  contextSidebar: document.getElementById("contextSidebar"),
   sideTabs: Array.from(document.querySelectorAll(".side-tab")),
+  viewGuide: document.getElementById("view-guide"),
   viewProfile: document.getElementById("view-profile"),
   viewBattlelog: document.getElementById("view-battlelog"),
   viewFramedata: document.getElementById("view-framedata"),
