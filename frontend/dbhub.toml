@@ -1,0 +1,21 @@
+[[sources]]
+id = "drive_rush"
+description = "DriveRush local MySQL database"
+type = "mysql"
+host = "${DBHUB_DB_HOST}"
+port = 3306
+database = "${DBHUB_DB_NAME}"
+user = "${DBHUB_DB_USER}"
+password = "${DBHUB_DB_PASSWORD}"
+sslmode = "${DBHUB_SSLMODE}"
+connection_timeout = 30
+query_timeout = 30
+
+[[tools]]
+name = "search_objects"
+source = "drive_rush"
+
+[[tools]]
+name = "execute_sql"
+source = "drive_rush"
+max_rows = 1000

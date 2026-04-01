@@ -1,0 +1,246 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SF6 Buckler Dashboard</title>
+    <link rel="stylesheet" href="./dashboard.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Street Fighter 6</p>
+        <h1>Buckler 战绩面板</h1>
+        <p class="subtitle">左侧模块导航，中间筛选导航，右侧查看详细数据</p>
+      </div>
+      <div class="actions">
+        <button id="syncBtn" class="primary">从当前页面同步</button>
+        <button id="fullSyncBtn" class="primary">全量同步</button>
+        <button id="silentSyncBtn" class="secondary">静默导入</button>
+        <button id="cloudSyncBtn" class="secondary">同步到云端</button>
+        <button id="importBackupBtn" class="secondary">导入本地备份</button>
+        <button id="refreshBtn" class="secondary">刷新数据</button>
+        <input id="importBackupInput" type="file" accept=".json,application/json" hidden />
+      </div>
+    </header>
+
+    <section class="status-card">
+      <h2>同步状态</h2>
+      <p id="syncStatus">等待同步</p>
+    </section>
+
+    <section class="status-card cloud-auth-card">
+      <h2>云端账号</h2>
+      <p id="cloudAuthStatus">未登录，仅可本地使用（不可同步到数据库）</p>
+      <p id="cloudAuthUser" class="cloud-auth-user is-hidden"></p>
+      <form id="cloudLoginForm" class="cloud-login-form">
+        <label>
+          邮箱
+          <input id="cloudEmailInput" type="email" autocomplete="username" placeholder="you@example.com" required />
+        </label>
+        <label>
+          密码
+          <input id="cloudPasswordInput" type="password" autocomplete="current-password" placeholder="请输入密码" required />
+        </label>
+        <div class="cloud-login-actions">
+          <button id="cloudLoginBtn" class="primary" type="submit">登录</button>
+          <button id="cloudRegisterBtn" class="secondary" type="button">注册并登录</button>
+        </div>
+      </form>
+      <button id="cloudLogoutBtn" class="secondary is-hidden" type="button">退出登录</button>
+    </section>
+
+    <main class="app-shell">
+      <aside class="sidebar">
+        <button class="side-tab" data-view="profile">基本资料</button>
+        <button class="side-tab active" data-view="battlelog">格斗记录</button>
+        <button class="side-tab" data-view="framedata">帧数表</button>
+      </aside>
+
+      <div class="context-sidebar">
+        <aside class="character-sidebar" id="characterSidebar">
+          <h3 class="sidebar-title">角色</h3>
+          <div class="sidebar-list" id="characterList"></div>
+        </aside>
+
+        <aside class="profile-sidebar is-hidden" id="profileSidebar">
+          <h3 class="sidebar-title">基本资料</h3>
+          <div class="sidebar-list">
+            <button class="profile-side-btn active" data-profile-tab="winrate">胜率</button>
+            <button class="profile-side-btn" data-profile-tab="league">段位积分</button>
+            <button class="profile-side-btn" data-profile-tab="master">Master积分</button>
+            <button class="profile-side-btn" data-profile-tab="battles">对战</button>
+            <button class="profile-side-btn" data-profile-tab="achievements">格斗成就</button>
+          </div>
+        </aside>
+      </div>
+
+      <section class="views">
+        <section id="view-profile" class="view-card is-hidden">
+          <section class="panel profile-panel">
+            <div class="panel-head">
+              <h2 id="profileSectionTitle">胜率</h2>
+              <div class="profile-controls">
+                <label class="select-wrap" for="profileSeasonSelect">
+                  赛季
+                  <select id="profileSeasonSelect"></select>
+                </label>
+                <label class="select-wrap" for="profileModeSelect">
+                  模式
+                  <select id="profileModeSelect">
+                    <option value="1">全部</option>
+                    <option value="2">排位赛</option>
+                    <option value="3">休闲赛</option>
+                    <option value="4">比赛间对战</option>
+                    <option value="5">格斗中心对战</option>
+                  </select>
+                </label>
+                <label class="select-wrap is-hidden" id="profileCharacterWrap" for="profileCharacterSelect">
+                  我方角色
+                  <select id="profileCharacterSelect"></select>
+                </label>
+                <label class="select-wrap is-hidden" id="profileBattleSortWrap" for="profileBattleSortSelect">
+                  排序
+                  <select id="profileBattleSortSelect">
+                    <option value="battle">按对战次数</option>
+                    <option value="winRate">按胜率</option>
+                  </select>
+                </label>
+                <label class="select-wrap is-hidden" id="profileBattleOrderWrap" for="profileBattleOrderSelect">
+                  顺序
+                  <select id="profileBattleOrderSelect">
+                    <option value="desc">降序</option>
+                    <option value="asc">升序</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="stats" id="profileStats"></div>
+            <p class="profile-hint" id="profileHint"></p>
+            <section id="profileAchievementsBoard" class="profile-achievements is-hidden"></section>
+            <table id="profileTable">
+              <thead>
+                <tr id="profileHeadRow"></tr>
+              </thead>
+              <tbody id="profileBody"></tbody>
+            </table>
+          </section>
+        </section>
+
+        <section id="view-battlelog" class="view-card">
+          <div class="layout">
+            <section class="panel chart-panel">
+              <div class="panel-head">
+                <h2 id="chartTitle">分数折线图</h2>
+                <div class="panel-controls">
+                  <label class="select-wrap chart-control" for="metricSelect">
+                    分数
+                    <select id="metricSelect">
+                      <option value="mr" selected>MR</option>
+                      <option value="lp">LP</option>
+                    </select>
+                  </label>
+                  <label class="select-wrap chart-control" for="rangeSelect">
+                    范围
+                    <select id="rangeSelect">
+                      <option value="0">全部</option>
+                      <option value="1">1天</option>
+                      <option value="3">3天</option>
+                      <option value="7" selected>7天</option>
+                      <option value="30">30天</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <div class="stats" id="chartStats"></div>
+              <div class="chart-wrap" id="chartWrap">
+                <canvas id="scoreChart"></canvas>
+                <p id="chartEmpty" class="chart-empty">暂无可绘制的数据，请先同步。</p>
+                <div id="chartTooltip" class="chart-tooltip"></div>
+              </div>
+            </section>
+
+            <section class="panel detail-panel">
+              <div class="panel-head">
+                <h2 id="detailTitle">最近对战</h2>
+                <div class="panel-controls">
+                  <label class="select-wrap chart-control" for="detailRangeSelect">
+                    范围
+                    <select id="detailRangeSelect">
+                      <option value="0" selected>全部</option>
+                      <option value="1">1天</option>
+                      <option value="3">3天</option>
+                      <option value="7">7天</option>
+                      <option value="30">30天</option>
+                    </select>
+                  </label>
+                  <label class="select-wrap chart-control" for="pageSizeSelect">
+                    每页
+                    <select id="pageSizeSelect">
+                      <option value="20" selected>20</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                      <option value="200">200</option>
+                    </select>
+                  </label>
+                  <div class="pager">
+                    <button id="prevPageBtn" class="pager-btn">上一页</button>
+                    <span id="pageInfo">第1 / 1 页</span>
+                    <button id="nextPageBtn" class="pager-btn">下一页</button>
+                  </div>
+                </div>
+              </div>
+              <div class="stats" id="detailStats"></div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>结果</th>
+                    <th>模式</th>
+                    <th>分数</th>
+                    <th>加减分</th>
+                    <th>我的角色</th>
+                    <th>对手角色</th>
+                    <th>对手名称</th>
+                  </tr>
+                </thead>
+                <tbody id="matchesBody"></tbody>
+              </table>
+            </section>
+          </div>
+        </section>
+
+        <section id="view-framedata" class="view-card is-hidden">
+          <section class="panel framedata-panel">
+            <div class="panel-head">
+              <h2 id="framedataTitle">帧数表</h2>
+              <div class="panel-controls framedata-mode-switch is-hidden" id="framedataModeWrap">
+                <button id="framedataModeClassicBtn" class="framedata-mode-btn active" type="button" title="经典">
+                  <img src="./assets/framedata-icons/logo-classic.png" alt="经典" />
+                </button>
+                <button id="framedataModeModernBtn" class="framedata-mode-btn" type="button" title="现代">
+                  <img src="./assets/framedata-icons/logo-modern.png" alt="现代" />
+                </button>
+              </div>
+            </div>
+            <div class="stats" id="framedataStats"></div>
+            <p class="profile-hint" id="framedataHint"></p>
+            <table>
+              <thead>
+                <tr id="framedataHeadRow"></tr>
+              </thead>
+              <tbody id="framedataBody"></tbody>
+            </table>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script src="./dashboard.data.js"></script>
+    <script src="./dashboard.common.js"></script>
+    <script src="./dashboard.framedata.js"></script>
+    <script src="./dashboard.battlelog.js"></script>
+    <script src="./dashboard.profile.js"></script>
+    <script src="./dashboard.app.js"></script>
+  </body>
+</html>

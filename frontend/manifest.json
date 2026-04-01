@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "SF6 Buckler Dashboard",
+  "version": "0.1.0",
+  "description": "Sync Street Fighter 6 Buckler battle logs to a full-page dashboard.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "tabs",
+    "scripting",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://www.streetfighter.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://localhost/*",
+    "https://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "SF6 Buckler Dashboard",
+    "default_popup": "popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.streetfighter.com/6/buckler/*"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dashboard/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}
