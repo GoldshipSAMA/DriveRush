@@ -1,9 +1,9 @@
 ﻿function renderCurrentView() {
   updateViewSwitch();
-  if (state.currentView === "profile") {
-    renderProfile();
-  } else if (state.currentView === "battlelog") {
+  if (state.currentView === "overview" || state.currentView === "battlelog") {
     renderBattlelog();
+  } else if (state.currentView === "profile") {
+    renderProfile();
   } else if (state.currentView === "framedata") {
     renderFramedata();
   }
@@ -30,14 +30,9 @@ function handleChartHover(event) {
 
   const p = nearest.point;
   refs.chartTooltip.style.display = "block";
-
-  const metricLabel = state.metric === "mr" ? "MR" : "LP";
-  const match = p.match || {};
-  const scoreText = `${metricLabel}: ${formatInt(p.value)}`;
-  const deltaText = `加减分: ${formatDelta(getMetricDelta(match))}`;
-  const timeText = `时间: ${formatDate(match.playedAt || "")}`;
-  const roleText = `角色: ${String(match.myCharacter || "-")} vs ${String(match.opponentCharacter || "-")}`;
-  refs.chartTooltip.textContent = [scoreText, deltaText, timeText, roleText].join("\n");
+  refs.chartTooltip.textContent = Array.isArray(p.tooltipLines)
+    ? p.tooltipLines.join("\n")
+    : "";
 
   const tooltipWidth = refs.chartTooltip.offsetWidth || 220;
   const tooltipHeight = refs.chartTooltip.offsetHeight || 72;
@@ -70,6 +65,9 @@ function renderCloudAuthState() {
   const loggedIn = Boolean(auth.loggedIn);
   const fullSyncRequired = Boolean(auth.fullSyncRequired);
   const apiBase = auth.apiBase ? `，服务：${auth.apiBase}` : "";
+  const summaryText = loggedIn
+    ? (fullSyncRequired ? "已登录，等待一次全量同步" : "已登录，可同步到云端")
+    : "未登录，仅可本地使用";
 
   if (refs.cloudAuthStatus) {
     refs.cloudAuthStatus.textContent = loggedIn
@@ -81,6 +79,12 @@ function renderCloudAuthState() {
   if (refs.cloudAuthUser) {
     refs.cloudAuthUser.classList.toggle("is-hidden", !loggedIn);
     refs.cloudAuthUser.textContent = loggedIn ? `当前账号：${formatCloudUserLabel(auth.user)}` : "";
+  }
+  if (refs.cloudNavTitle) {
+    refs.cloudNavTitle.textContent = loggedIn ? formatCloudUserLabel(auth.user) : "账号与同步";
+  }
+  if (refs.cloudNavSummary) {
+    refs.cloudNavSummary.textContent = summaryText;
   }
   if (refs.cloudLoginForm) {
     refs.cloudLoginForm.classList.toggle("is-hidden", loggedIn);
@@ -430,7 +434,22 @@ function bindEvents() {
 
   refs.sideTabs.forEach((btn) => {
     btn.addEventListener("click", () => {
-      state.currentView = btn.dataset.view || "battlelog";
+      state.currentView = btn.dataset.view || "overview";
+      renderCurrentView();
+    });
+  });
+
+  if (refs.cloudAccountToggle && refs.cloudPanelBody) {
+    refs.cloudAccountToggle.addEventListener("click", () => {
+      const collapsed = refs.cloudPanelBody.classList.toggle("is-collapsed");
+      refs.cloudAccountToggle.setAttribute("aria-expanded", String(!collapsed));
+    });
+  }
+
+  refs.overviewProfileLinks.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      state.profileTab = btn.dataset.profileTab || "winrate";
+      state.currentView = "profile";
       renderCurrentView();
     });
   });
@@ -460,9 +479,9 @@ function bindEvents() {
   }
   if (refs.rangeSelect) {
     refs.rangeSelect.addEventListener("change", () => {
-      const value = Number(refs.rangeSelect.value);
-      const allowed = new Set([0, 1, 3, 7, 30]);
-      state.rangeDays = allowed.has(value) ? value : 7;
+      const value = refs.rangeSelect.value;
+      const allowed = new Set(["0", "1", "3", "7", "30", "recent100"]);
+      state.rangeDays = allowed.has(value) ? value : "7";
       renderBattlelog();
     });
   }
@@ -525,7 +544,7 @@ function bindEvents() {
   });
 
   window.addEventListener("resize", () => {
-    if (state.currentView === "battlelog") {
+    if (state.currentView === "overview" || state.currentView === "battlelog") {
       renderBattlelog();
     }
     if (state.currentView === "framedata") {
@@ -560,9 +579,4 @@ function init() {
 }
 
 init();
-
-
-
-
-
 

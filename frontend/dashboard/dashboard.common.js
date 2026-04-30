@@ -263,31 +263,50 @@ function summarize(matches) {
   return { wins, losses, draws, total, winRate };
 }
 
+function getMetricValueForMetric(match, metric) {
+  const before = metric === "mr" ? toNum(match.myMasterRating) : toNum(match.myLeaguePoint);
+  const delta = getMetricDeltaForMetric(match, metric);
+  if (before === null) {
+    return null;
+  }
+  return before + (delta || 0);
+}
+
+function getMetricDeltaForMetric(match, metric) {
+  return metric === "mr" ? toNum(match.masterRatingDelta) : toNum(match.leaguePointDelta);
+}
+
+function getMetricBeforeValueForMetric(match, metric) {
+  return metric === "mr" ? toNum(match.myMasterRating) : toNum(match.myLeaguePoint);
+}
+
 function getMetricValue(match) {
-  return state.metric === "mr" ? toNum(match.myMasterRating) : toNum(match.myLeaguePoint);
+  return getMetricValueForMetric(match, state.metric);
 }
 
 function getMetricDelta(match) {
-  return state.metric === "mr" ? toNum(match.masterRatingDelta) : toNum(match.leaguePointDelta);
+  return getMetricDeltaForMetric(match, state.metric);
+}
+
+function hasMetricData(matches, metric) {
+  return (Array.isArray(matches) ? matches : []).some((match) => getMetricValueForMetric(match, metric) !== null);
 }
 
 function updateViewSwitch() {
-  const hideContextSidebar = state.currentView === "guide";
   setActiveByData(refs.sideTabs, "view", state.currentView);
-  refs.viewGuide.classList.toggle("is-hidden", state.currentView !== "guide");
-  refs.viewProfile.classList.toggle("is-hidden", state.currentView !== "profile");
-  refs.viewBattlelog.classList.toggle("is-hidden", state.currentView !== "battlelog");
-  refs.viewFramedata.classList.toggle("is-hidden", state.currentView !== "framedata");
-  refs.characterSidebar.classList.toggle(
-    "is-hidden",
-    state.currentView !== "battlelog" && state.currentView !== "framedata"
-  );
-  refs.profileSidebar.classList.toggle("is-hidden", state.currentView !== "profile");
-  if (refs.contextSidebar) {
-    refs.contextSidebar.classList.toggle("is-hidden", hideContextSidebar);
+  const showBattleSurface = state.currentView === "overview" || state.currentView === "battlelog";
+  if (refs.viewBattlelog) {
+    refs.viewBattlelog.classList.toggle("is-hidden", !showBattleSurface);
   }
-  if (refs.appShell) {
-    refs.appShell.classList.toggle("no-context", hideContextSidebar);
+  if (refs.viewProfile) {
+    refs.viewProfile.classList.toggle("is-hidden", state.currentView !== "profile");
+  }
+  if (refs.viewFramedata) {
+    refs.viewFramedata.classList.toggle("is-hidden", state.currentView !== "framedata");
+  }
+  if (refs.root) {
+    refs.root.classList.toggle("is-overview-focus", state.currentView === "overview");
+    refs.root.classList.toggle("is-battlelog-focus", state.currentView === "battlelog");
   }
 }
 
@@ -372,12 +391,15 @@ function buildCharacterOptions(matches) {
 }
 
 function renderCharacterSidebar(options) {
-  refs.characterList.innerHTML = "";
+  if (!refs.battleCharacterList) {
+    return;
+  }
+  refs.battleCharacterList.innerHTML = "";
   if (!options.length) {
-    const p = document.createElement("p");
-    p.className = "character-empty";
-    p.textContent = "暂无角色数据";
-    refs.characterList.appendChild(p);
+    const empty = document.createElement("span");
+    empty.className = "stat-pill";
+    empty.textContent = "暂无角色数据";
+    refs.battleCharacterList.appendChild(empty);
     return;
   }
 
@@ -386,25 +408,26 @@ function renderCharacterSidebar(options) {
   }
 
   const allBtn = document.createElement("button");
-  allBtn.className = `character-btn${!state.currentCharacter ? " active" : ""}`;
+  allBtn.className = `character-filter-btn${!state.currentCharacter ? " active" : ""}`;
   allBtn.textContent = "全部角色";
+  allBtn.type = "button";
   allBtn.addEventListener("click", () => {
     state.currentCharacter = "";
     state.page = 1;
     renderBattlelog();
   });
-  refs.characterList.appendChild(allBtn);
+  refs.battleCharacterList.appendChild(allBtn);
 
   options.forEach((opt) => {
     const btn = document.createElement("button");
-    btn.className = `character-btn${opt.key === state.currentCharacter ? " active" : ""}`;
-    btn.textContent = opt.label;
+    btn.className = `character-filter-btn${opt.key === state.currentCharacter ? " active" : ""}`;
+    btn.type = "button";
+    btn.textContent = `${opt.label} · ${opt.count}`;
     btn.addEventListener("click", () => {
       state.currentCharacter = opt.key;
       state.page = 1;
       renderBattlelog();
     });
-    refs.characterList.appendChild(btn);
+    refs.battleCharacterList.appendChild(btn);
   });
 }
-

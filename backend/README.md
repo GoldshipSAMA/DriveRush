@@ -12,7 +12,7 @@
 
 - JDK 17+
 - Maven 3.9+
-- MySQL（库名：`drive-rush`，默认用户：`root`，空密码）
+- MySQL（库名：`drive_rush`，默认用户：`root`，空密码）
 
 ## 启动
 

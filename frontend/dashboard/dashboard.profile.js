@@ -119,6 +119,107 @@ function renderProfileTable(headers, rows) {
   });
 }
 
+function normalizeAchievementPercent(value) {
+  const num = toNum(value);
+  if (num === null || num < 0) {
+    return null;
+  }
+  return Math.abs(num) <= 1 ? num * 100 : num;
+}
+
+function getAchievementDistributionItems(group) {
+  const items = Array.isArray(group && group.items) ? group.items : [];
+  const visible = items
+    .map((item) => ({
+      ...item,
+      percent: normalizeAchievementPercent(item && item.value)
+    }))
+    .filter((item) => item.exists && item.percent !== null);
+  if (visible.length < 2) {
+    return [];
+  }
+
+  const total = visible.reduce((acc, item) => acc + item.percent, 0);
+  if (total < 98 || total > 102) {
+    return [];
+  }
+  return visible.map((item) => ({
+    ...item,
+    percent: total ? (item.percent / total) * 100 : 0
+  }));
+}
+
+function renderAchievementCardList(items) {
+  const list = document.createElement("div");
+  list.className = "achievement-group-list";
+
+  items.forEach((item) => {
+    const row = document.createElement("article");
+    row.className = "achievement-item";
+    if (!item.exists) {
+      row.classList.add("is-missing");
+    }
+
+    const label = document.createElement("p");
+    label.className = "achievement-item-label";
+    label.textContent = String(item.label || "-");
+    row.appendChild(label);
+
+    const value = document.createElement("p");
+    value.className = "achievement-item-value";
+    value.textContent = String(item.display == null ? "-" : item.display);
+    row.appendChild(value);
+
+    list.appendChild(row);
+  });
+
+  return list;
+}
+
+function renderAchievementDistributionChart(items) {
+  const chart = document.createElement("div");
+  chart.className = "achievement-chart";
+
+  const bar = document.createElement("div");
+  bar.className = "achievement-chart-bar";
+  items.forEach((item, index) => {
+    const segment = document.createElement("span");
+    segment.className = "achievement-chart-segment";
+    segment.style.width = `${Math.max(0, item.percent).toFixed(3)}%`;
+    segment.style.setProperty("--segment-index", String(index));
+    segment.title = `${item.label || "-"}：${formatPercent(item.percent, 2)}`;
+    bar.appendChild(segment);
+  });
+  chart.appendChild(bar);
+
+  const legend = document.createElement("div");
+  legend.className = "achievement-chart-legend";
+  items.forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "achievement-chart-row";
+
+    const marker = document.createElement("span");
+    marker.className = "achievement-chart-marker";
+    marker.style.setProperty("--segment-index", String(index));
+    row.appendChild(marker);
+
+    const label = document.createElement("span");
+    label.className = "achievement-chart-label";
+    label.textContent = String(item.label || "-");
+    row.appendChild(label);
+
+    const value = document.createElement("strong");
+    value.className = "achievement-chart-value";
+    value.textContent = formatPercent(item.percent, 2);
+    row.appendChild(value);
+
+    legend.appendChild(row);
+  });
+  chart.appendChild(legend);
+
+  return chart;
+}
+
 function renderAchievementBoard(achievement) {
   if (!refs.profileAchievementsBoard) {
     return;
@@ -137,32 +238,17 @@ function renderAchievementBoard(achievement) {
     title.textContent = String(group.group || "-");
     section.appendChild(title);
 
-    const list = document.createElement("div");
-    list.className = "achievement-group-list";
-
     const items = Array.isArray(group.items) ? group.items : [];
-    items.forEach((item) => {
-      const row = document.createElement("article");
-      row.className = "achievement-item";
-      if (!item.exists) {
-        row.classList.add("is-missing");
-      }
+    const distributionItems = getAchievementDistributionItems(group);
+    if (distributionItems.length) {
+      section.classList.add("is-chart");
+      section.appendChild(renderAchievementDistributionChart(distributionItems));
+      renderedCount += distributionItems.length;
+    } else {
+      section.appendChild(renderAchievementCardList(items));
+      renderedCount += items.length;
+    }
 
-      const label = document.createElement("p");
-      label.className = "achievement-item-label";
-      label.textContent = String(item.label || "-");
-      row.appendChild(label);
-
-      const value = document.createElement("p");
-      value.className = "achievement-item-value";
-      value.textContent = String(item.display == null ? "-" : item.display);
-      row.appendChild(value);
-
-      list.appendChild(row);
-      renderedCount += 1;
-    });
-
-    section.appendChild(list);
     refs.profileAchievementsBoard.appendChild(section);
   });
 
@@ -175,28 +261,14 @@ function renderAchievementBoard(achievement) {
     title.textContent = "其他字段";
     section.appendChild(title);
 
-    const list = document.createElement("div");
-    list.className = "achievement-group-list";
+    const items = extraRows.slice(0, 24).map((item) => ({
+      label: item.key,
+      display: item.display,
+      exists: true
+    }));
+    section.appendChild(renderAchievementCardList(items));
+    renderedCount += items.length;
 
-    extraRows.slice(0, 24).forEach((item) => {
-      const row = document.createElement("article");
-      row.className = "achievement-item achievement-item-extra";
-
-      const label = document.createElement("p");
-      label.className = "achievement-item-label";
-      label.textContent = String(item.key || "-");
-      row.appendChild(label);
-
-      const value = document.createElement("p");
-      value.className = "achievement-item-value";
-      value.textContent = String(item.display == null ? "-" : item.display);
-      row.appendChild(value);
-
-      list.appendChild(row);
-      renderedCount += 1;
-    });
-
-    section.appendChild(list);
     refs.profileAchievementsBoard.appendChild(section);
   }
 
